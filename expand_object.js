@@ -1,5 +1,5 @@
 // Expands a javascript object to its entirety as a string
-// n: current depth, max: max depth, tab: tab length, prepend: string prepended to front, forbid: attr names to disallow
+// n: current depth, max: max depth, prepend: string prepended to front, forbid: attr names to disallow, prependFn: how to determine the deeper prepend
 function show_helper(obj, n, max, prepend, forbid, prependFn) {
   let leadingSpace = Array(prepend.search(/\S|$/) + 1).join(' ');
   if(n > max) return leadingSpace + "[Too far]\n";
