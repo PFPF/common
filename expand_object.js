@@ -1,7 +1,7 @@
 // Expands a javascript object to its entirety as a string
 // n: current depth, max: max depth, prepend: string prepended to front
 // forbid: attr names to disallow, prependFn: how to determine the deeper prepend
-function show_helper(obj, n, max, prepend, forbid, prependFn) {
+function _expand_object(obj, max, forbid, prependFn, n, prepend) {
   let leadingSpaces = Array(prepend.search(/\S|$/) + 1).join(' ');
   let out = "";
   for(let prop in obj) {
@@ -12,24 +12,28 @@ function show_helper(obj, n, max, prepend, forbid, prependFn) {
     out += prepend + prop + ": " ;
     let val = obj[prop];
     if(typeof(val) == 'object') {
-      if(n >= max) out += "(Too far)";
-      else out += "{\n" + show_helper(val, n+1, max, prependFn(prop, prepend), forbid, prependFn) + leadingSpaces + "}";
+      if(max >= 0 && n >= max) out += "[Too far]";
+      else out += "{\n" + _expand_object(val, max, forbid, prependFn, n+1, prependFn(prop, prepend)) + leadingSpaces + "}";
     }
     else out += val;
     out += "\n";
   }
   return out;
 }
-function tab(n) { return (s, p) => p + Array(n + 1).join(' '); }
-function fulltrace(delimiter) { return (s, p) => " " + p + s + delimiter; }
-function expand_object(obj, max, forbid, prependFn) {
-  return show_helper(obj, 0, max, "", forbid, prependFn);
+var tab = n => (s, p) => p + Array(n + 1).join(' '); 
+var fulltrace = delimiter => (s, p) => " " + p + s + delimiter;
+// when maxDepth is -1, there'd be no limit in recursion (watch out for circlar references).
+function expand_object(obj, maxDepth, forbid, prependFn) {
+  return _expand_object(obj, maxDepth, forbid, prependFn, 0, "");
 }
 
 
+
+// Examples
+
 var sampleObj = {attr1: 111, attr2: {attr1: 123, attr2: {attr1: {attr1: 0}}, attrBad: 666}, attrBad: 777};
 
-console.log(expand_object(sampleObj, 10, [], tab(3)));
+console.log(expand_object(sampleObj, -1, [], tab(3)));
 /*
 attr1: 111
 attr2: {
@@ -44,7 +48,7 @@ attr2: {
 attrBad: 777
 */
 
-console.log(expand_object(sampleObj, 10, [], fulltrace(".")));
+console.log(expand_object(sampleObj, -1, [], fulltrace(".")));
 /*
 attr1: 111
 attr2: {
@@ -65,7 +69,7 @@ attr1: 111
 attr2: {
     attr1: 123
     attr2: {
-        attr1: (Too far)
+        attr1: [Too far]
     }
 }
 */
