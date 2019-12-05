@@ -1,8 +1,8 @@
 // Expands a javascript object to its entirety as a string
-// n: current depth, max: max depth, prepend: string prepended to front, forbid: attr names to disallow, prependFn: how to determine the deeper prepend
+// n: current depth, max: max depth, prepend: string prepended to front
+// forbid: attr names to disallow, prependFn: how to determine the deeper prepend
 function show_helper(obj, n, max, prepend, forbid, prependFn) {
-  let leadingSpace = Array(prepend.search(/\S|$/) + 1).join(' ');
-  if(n > max) return leadingSpace + "[Too far]\n";
+  let leadingSpaces = Array(prepend.search(/\S|$/) + 1).join(' ');
   let out = "";
   for(let prop in obj) {
     var found = false;
@@ -11,7 +11,10 @@ function show_helper(obj, n, max, prepend, forbid, prependFn) {
     
     out += prepend + prop + ": " ;
     let val = obj[prop];
-    if(typeof(val) == 'object') out += "{\n" + show_helper(val, n+1, max, prependFn(prop, prepend), forbid, prependFn) + leadingSpace + "}";
+    if(typeof(val) == 'object') {
+      if(n >= max) out += "(Too far)";
+      else out += "{\n" + show_helper(val, n+1, max, prependFn(prop, prepend), forbid, prependFn) + leadingSpaces + "}";
+    }
     else out += val;
     out += "\n";
   }
@@ -62,9 +65,7 @@ attr1: 111
 attr2: {
     attr1: 123
     attr2: {
-        attr1: {
-            [Too far]
-        }
+        attr1: (Too far)
     }
 }
 */
