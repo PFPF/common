@@ -74,3 +74,5 @@ attr2: {
 }
 */
 
+expand_object(this, 2, [], tab(3))
+/* (Something 5.8 MB long) */
