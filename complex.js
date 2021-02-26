@@ -82,7 +82,13 @@ function toRect([r,t]) { // 0, -0, 0i, C0 becomes the same, DONT call Infinities
   let [stpi, ctpi] = _sincospi(t);
   return [r * ctpi, r * stpi];
 }
-function fromRect([x,y]) { // x and y must be finite; [0,0] => [0,0] (Comp0)
+function fromRect([x,y]) { // x and y must be finite; [0,0] => [0,0] (Comp0); [+/-Inf, 0] => [Inf, 0 or 1]; [Inf, +/-Inf] => CompInf
+  if(x !== x || y !== y) return [NaN, NaN];
+  if(x == 0) {
+    return y == 0? [NaN, NaN] : (y > 0? [y, 0.5] : [-y, -0.5]);
+  } else if(y == 0) {
+    return x > 0? [x, 0] : [-x, 1];
+  }
   let modulus = Math.sqrt(x * x + y * y);
   return [modulus, Math.acos(x / modulus) / Math.PI * (y >= 0? 1 : -1)];
 }
