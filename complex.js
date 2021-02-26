@@ -63,9 +63,10 @@ function divide([r,t],[s,b]) {
 
 function add([r,t],[s,b]) {
   let rinf = r == Infinity, sinf = s == Infinity;
+  if(t == b) return [r+s, t];
   if(rinf) {
     if(sinf) {
-      if((t - b) % 1 == 0) return t == b? [r,t] : [NaN,NaN];
+      if(t - b == 1 || b - t == 1) return [NaN,NaN];
       else return [Infinity, NaN];
     } else return [r,t];
   } else {
@@ -75,14 +76,13 @@ function add([r,t],[s,b]) {
       return fromRect([x1+x2, y1+y2]);
     }
   }
-  
 }
 
 function toRect([r,t]) { // 0, -0, 0i, C0 becomes the same, DONT call Infinities on this
   let [stpi, ctpi] = _sincospi(t);
   return [r * ctpi, r * stpi];
 }
-function fromRect([x,y]) { // x and y must be finite; returns 
+function fromRect([x,y]) { // x and y must be finite; [0,0] => [0,0] (Comp0)
   let modulus = Math.sqrt(x * x + y * y);
   return [modulus, Math.acos(x / modulus) / Math.PI * (y >= 0? 1 : -1)];
 }
