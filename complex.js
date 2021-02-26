@@ -6,7 +6,7 @@
 // vals = {"0":[0,0],"1":[1,0],"2":[2,0],"-0":[0,1],"-1":[1,1],"-2":[2,1],"0i":[0,0.5],"i":[1,0.5],"c0":[0,NaN],"inf":[Infinity,0],"-inf":[Infinity,1],"cinf":[Infinity,NaN],"nan":[NaN,NaN]};
 // Object.keys(vals).forEach(a => Object.keys(vals).forEach(b => console.log(a + " ^ " + b + " = (" + pow(vals[a], vals[b]) + ")")));
 
-function assert(truth, desc) { if(truth) console.log(desc); else throw error("Assertion failed: " + desc); }
+function assert(truth, desc) { if(truth) console.log(desc); else throw ("Assertion failed: " + desc); }
 function aae(arr1, arr2, desc) { assert(arr1.length === arr2.length && arr1.every((v, i) => v === arr2[i] || isNaN(v) && isNaN(arr2[i])), desc); } // asserts arrays equal
 
 // normalize: normalizes an arbitrary angle into (-1, 1]
@@ -15,12 +15,13 @@ function normalize(t) {
 }
 
 // pow
-/* examples: */
+/* examples: 
 aae(pow([1,0.5],[2,0]), [1,1], "i^2 = -1");
 aae(pow([0,0],[Infinity,0]), [0,0], "0^Infty = 0");
-aae(pow([0,NaN],[Infinity,0]), [0,NaN], "C0^Infty = C0");
-aae(pow([0,0.5],[2,1]), [Infinity,1], "(0i)^-2 = -Infinity");
-
+aae(pow([0.8,0.5],[Infinity,0]), [0,NaN], "(0.8i)^Infty = Complex0");
+aae(pow([0,0.5],[2,1]), [Infinity,1], "(0i)^-2 = -Infty");
+aae(pow([Infinity,NaN],[Infinity,1]), [0,NaN], "ComplexInfty^-Infty = Complex0");
+*/
 function pow([r,t],[s,b]) {
   if(s == 0) return [1, 0]; // yes even if all other three are NaN
   let pi = Math.PI, bmpi = (b == 0 || b == 1) && (1 - 2 * b), bdhp = (b == 0.5 || b == -0.5) && 2 * b, logr = Math.log(r), tpi = t * pi, bpi = b * pi, 
