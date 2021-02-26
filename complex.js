@@ -1,6 +1,7 @@
 // Complex numbers are represented in the form [r, phi/pi], where r >= 0 and the second entry is in (-1, 1].
 // For example, 0 = [0,0], -0 = [0,1], ComplexZero = [0,NaN], i = [1,0.5], -i = [1,-0.5], 0i = [0,0.5]
 // Infinity = [Infinity,0], -Infinity = [Infinity,1], ComplexInfinity = [Infinity, NaN]
+// Then it's pretty clear that only ComplexZero, ComplexInfinity and NaN are negations of themselves
 
 const vals = {
   "1": [1,0],
@@ -19,29 +20,14 @@ const vals = {
   "CInf": [Infinity,NaN], // the generic complex infinity, the reciprocal of C0
   "NaN": [NaN,NaN], // one can argue that 1^Inf should be [NaN,0], but I thought if I allow [NaN,0] I'd also allow [NaN, anything]. So I'll use the same value.
 };
-// Totality pow check
-Object.keys(vals).forEach(a => Object.keys(vals).forEach(b => console.log(a + " ^ " + b + " = (" + pow(vals[a], vals[b]) + ")")));
+// Totality pow check code
+// Object.keys(vals).forEach(a => Object.keys(vals).forEach(b => console.log(a + " ^ " + b + " = (" + pow(vals[a], vals[b]) + ")")));
 
-function assert(truth, desc) { if(truth) console.log(desc); else throw ("Assertion failed: " + desc); }
-function aae(arr1, arr2, desc) { assert(arr1.length === arr2.length && arr1.every((v, i) => v === arr2[i] || isNaN(v) && isNaN(arr2[i])), desc); } // asserts arrays equal
-
-// normalize: normalizes an arbitrary angle into (-1, 1]
-function normalize(t) {
-  return ((t + 1) % 2 - 2) % 2 - t + 1 + t; // <=> t + 2 * Math.floor((1 - t) / 2) but faster (if removing -t+t, will be slightly inaccurate for -0.1)
-}
 
 // pow
-/* examples: 
-aae(pow([1,0.5],[2,0]), [1,1], "i^2 = -1");
-aae(pow([0,0],[Infinity,0]), [0,0], "0^Infty = 0");
-aae(pow([0.8,0.5],[Infinity,0]), [0,NaN], "(0.8i)^Infty = Complex0");
-aae(pow([0,0.5],[2,1]), [Infinity,1], "(0i)^-2 = -Infty");
-aae(pow([Infinity,NaN],[Infinity,1]), [0,NaN], "ComplexInfty^-Infty = Complex0");
-*/
 function pow([r,t],[s,b]) {
   if(s == 0) return [1, 0]; // yes even if all other three are NaN
-  let pi = Math.PI, bmpi = (b == 0 || b == 1) && (1 - 2 * b), bdhp = (b == 0.5 || b == -0.5) && 2 * b, logr = Math.log(r), tpi = t * pi, bpi = b * pi, 
-      sbpi = !bmpi && (bdhp || Math.sin(bpi)), cbpi = bmpi || (!bdhp && Math.cos(bpi));
+  let pi = Math.PI, logr = Math.log(r), tpi = t * pi, [sbpi, cbpi] = _sincospi(b); // sbpi, cbpi := sin and cos of b*pi
   let mag = sbpi != 0 && r == 0? NaN : Math.exp(s * (cbpi * logr - (sbpi && sbpi * tpi)));
   let ang = sbpi == 0 && tpi == 0 && logr != 0? 0 : (cbpi * tpi + (sbpi && sbpi * logr)) * s / pi;
   return [mag, normalize(ang)];
@@ -70,6 +56,48 @@ function unaryMinus([r,t]) { // equivalent to multiply([r,t], [1,1])
 function reciprocal([r,t]) { // equivalent to pow([r,t], [1,1]), but simplifies exp(-log(r)) to 1/r and -1*(t*pi)/pi to -t
   return [1/r, t == 1? t : -t];
 }
+
+function divide([r,t],[s,b]) {
+  return multiply([r,t], reciprocal([s,b]));
+}
+
+function add([r,t],[s,b]) {
+  let rinf = r == Infinity, sinf = s == Infinity;
+  if(rinf) {
+    if(sinf) {
+      if((t - b) % 1 == 0) return t == b? [r,t] : [NaN,NaN];
+      else return [Infinity, NaN];
+    } else return [r,t];
+  } else {
+    if(sinf) return [s,b];
+    else {
+      let [x1,y1] = toRect([r,t]), [x2,y2] = toRect([s,b]);
+      return fromRect([x1+x2, y1+y2]);
+    }
+  }
+  
+}
+
+function toRect([r,t]) { // 0, -0, 0i, C0 becomes the same, DONT call Infinities on this
+  let [stpi, ctpi] = _sincospi(t);
+  return [r * ctpi, r * stpi];
+}
+function fromRect([x,y]) { // x and y must be finite; returns 
+  let modulus = Math.sqrt(x * x + y * y);
+  return [modulus, Math.acos(x / modulus) / Math.PI * (y >= 0? 1 : -1)];
+}
+
+
+// normalize: normalizes an arbitrary angle into (-1, 1]
+function normalize(t) {
+  return ((t + 1) % 2 - 2) % 2 - t + 1 + t; // <=> t + 2 * Math.floor((1 - t) / 2) but faster (if removing -t+t, will be slightly inaccurate for -0.1)
+}
+function _sincospi(t) {
+  // returns [sin(t*pi), cos(t*pi)]. t is in (-1,1]
+  let cvo0 = (t == 0 || t == 1) && (1 - 2 * t), svo0 = (t == 0.5 || t == -0.5) && 2 * t, tpi = t * Math.PI;
+  return [!cvo0 && (svo0 || Math.sin(tpi)), cvo0 || (!svo0 && Math.cos(tpi))];
+}
+
 
 
 
