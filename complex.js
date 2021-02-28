@@ -90,7 +90,7 @@ function fromRect([x,y]) { // x and y must be finite; [0,0] => [0,0] (Comp0); [+
     return x > 0? [x, 0] : [-x, 1];
   }
   let modulus = Math.sqrt(x * x + y * y), absAng = Math.acos(x / modulus) / Math.PI;
-  return [modulus, y < 0 && absAng != 1 : -absAng : absAng];
+  return [modulus, y < 0 && absAng != 1? -absAng : absAng];
 }
 
 
